@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
+// Copyright 2019 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -10,8 +10,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -21,7 +24,9 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Handles share intent. */
+/**
+ * Handles share intent.
+ */
 class Share {
 
   private Context context;
@@ -45,7 +50,19 @@ class Share {
     this.activity = activity;
   }
 
-  void share(String text, String subject) {
+  /**
+   *
+   *
+   * @param context
+   * @param packageName
+   * @return
+   */
+  boolean isAppInstall(String packageName) {
+    Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(packageName);
+    return launchIntent != null;
+  }
+
+  void share(String text, String subject, String packageName, String activityName) {
     if (text == null || text.isEmpty()) {
       throw new IllegalArgumentException("Non-empty text expected");
     }
@@ -55,12 +72,21 @@ class Share {
     shareIntent.putExtra(Intent.EXTRA_TEXT, text);
     shareIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
     shareIntent.setType("text/plain");
-    Intent chooserIntent = Intent.createChooser(shareIntent, null /* dialog title optional */);
+    if (isAppInstall(packageName)) {
+      if (TextUtils.isEmpty(activityName)) {
+        shareIntent.setPackage(packageName);
+      } else {
+        shareIntent.setClassName(packageName, activityName);
+        startActivity(shareIntent);
+        return;
+      }
+    }
+    Intent chooserIntent = Intent.createChooser(shareIntent, subject != null ? subject : "Share" /* dialog title optional */);
     startActivity(chooserIntent);
   }
 
-  void shareFiles(List<String> paths, List<String> mimeTypes, String text, String subject)
-      throws IOException {
+  void shareFiles(List<String> paths, List<String> mimeTypes, String text, String subject, String packageName, String activityName)
+          throws IOException {
     if (paths == null || paths.isEmpty()) {
       throw new IllegalArgumentException("Non-empty path expected");
     }
@@ -70,13 +96,13 @@ class Share {
 
     Intent shareIntent = new Intent();
     if (fileUris.isEmpty()) {
-      share(text, subject);
+      share(text, subject, packageName, activityName);
       return;
     } else if (fileUris.size() == 1) {
       shareIntent.setAction(Intent.ACTION_SEND);
       shareIntent.putExtra(Intent.EXTRA_STREAM, fileUris.get(0));
       shareIntent.setType(
-          !mimeTypes.isEmpty() && mimeTypes.get(0) != null ? mimeTypes.get(0) : "*/*");
+              !mimeTypes.isEmpty() && mimeTypes.get(0) != null ? mimeTypes.get(0) : "*/*");
     } else {
       shareIntent.setAction(Intent.ACTION_SEND_MULTIPLE);
       shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, fileUris);
@@ -85,24 +111,37 @@ class Share {
     if (text != null) shareIntent.putExtra(Intent.EXTRA_TEXT, text);
     if (subject != null) shareIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
     shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-    Intent chooserIntent = Intent.createChooser(shareIntent, null /* dialog title optional */);
-
-    List<ResolveInfo> resInfoList =
-        getContext()
-            .getPackageManager()
-            .queryIntentActivities(chooserIntent, PackageManager.MATCH_DEFAULT_ONLY);
-    for (ResolveInfo resolveInfo : resInfoList) {
-      String packageName = resolveInfo.activityInfo.packageName;
-      for (Uri fileUri : fileUris) {
-        getContext()
-            .grantUriPermission(
-                packageName,
-                fileUri,
-                Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+    if (isAppInstall(packageName)) {
+      if (TextUtils.isEmpty(activityName)) {
+        shareIntent.setPackage(packageName);
+      } else {
+        grantUriPermission(shareIntent,fileUris);
+        shareIntent.setClassName(packageName, activityName);
+        startActivity(shareIntent);
+        return;
       }
     }
-
+    grantUriPermission(shareIntent,fileUris);
+    Intent chooserIntent = Intent.createChooser(shareIntent, subject != null ? subject : "Share" /* dialog title optional */);
     startActivity(chooserIntent);
+  }
+
+  private void grantUriPermission(Intent chooserIntent,List<Uri> fileUris) {
+
+    List<ResolveInfo> resInfoList =
+            getContext()
+                    .getPackageManager()
+                    .queryIntentActivities(chooserIntent, PackageManager.MATCH_DEFAULT_ONLY);
+    for (ResolveInfo resolveInfo : resInfoList) {
+      String packName = resolveInfo.activityInfo.packageName;
+      for (Uri fileUri : fileUris) {
+        getContext()
+                .grantUriPermission(
+                        packName,
+                        fileUri,
+                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+      }
+    }
   }
 
   private void startActivity(Intent intent) {
@@ -125,8 +164,8 @@ class Share {
       }
 
       uris.add(
-          FileProvider.getUriForFile(
-              getContext(), getContext().getPackageName() + ".flutter.share_provider", file));
+              FileProvider.getUriForFile(
+                      getContext(), getContext().getPackageName() + ".flutter.share_provider", file));
     }
     return uris;
   }
