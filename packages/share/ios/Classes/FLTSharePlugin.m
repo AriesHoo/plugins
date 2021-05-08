@@ -110,8 +110,10 @@ static NSString *const PLATFORM_CHANNEL = @"plugins.flutter.io/share";
       originRect = CGRectMake([originX doubleValue], [originY doubleValue],
                               [originWidth doubleValue], [originHeight doubleValue]);
     }
-
-    if ([@"share" isEqualToString:call.method]) {
+    if ([@"isAppInstall" isEqualToString:call.method]) {
+          NSString *scheme = arguments[@"packageOrScheme"];
+          result(@([self isAppInstall:scheme]));
+    }else if ([@"share" isEqualToString:call.method]) {
       NSString *shareText = arguments[@"text"];
       NSString *shareSubject = arguments[@"subject"];
 
@@ -160,6 +162,17 @@ static NSString *const PLATFORM_CHANNEL = @"plugins.flutter.io/share";
       result(FlutterMethodNotImplemented);
     }
   }];
+}
+
++ (BOOL)isAppInstall:(NSString *)scheme {
+  NSURL* url;
+    if ([scheme containsString:@"://"]) {
+        url = [NSURL URLWithString:[NSString stringWithFormat:@"%@",scheme]];
+    } else {
+        url = [NSURL URLWithString:[NSString stringWithFormat:@"%@://",scheme]];
+    }
+  UIApplication *application = [UIApplication sharedApplication];
+  return [application canOpenURL:url];
 }
 
 + (void)share:(NSArray *)shareItems

@@ -20,6 +20,7 @@ class DemoApp extends StatefulWidget {
 }
 
 class DemoAppState extends State<DemoApp> {
+  String scheme = '';
   String text = '';
   String subject = '';
   List<String> imagePaths = [];
@@ -38,6 +39,28 @@ class DemoAppState extends State<DemoApp> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
+                  TextField(
+                    decoration: const InputDecoration(
+                      labelText: 'app url scheme',
+                      hintText:
+                          'Enter an app scheme like tel for Phone or sms for SMS',
+                    ),
+                    maxLines: 2,
+                    onChanged: (String value) => setState(() {
+                      scheme = value;
+                    }),
+                  ),
+                  const Padding(padding: EdgeInsets.only(top: 12.0)),
+                  Builder(
+                    builder: (BuildContext context) {
+                      return ElevatedButton(
+                        child: const Text('isAppInstall'),
+                        onPressed: scheme.isEmpty
+                            ? null
+                            : () => _isAppInstall(),
+                      );
+                    },
+                  ),
                   TextField(
                     decoration: const InputDecoration(
                       labelText: 'Share text:',
@@ -106,6 +129,11 @@ class DemoAppState extends State<DemoApp> {
     setState(() {
       imagePaths.removeAt(position);
     });
+  }
+
+  _isAppInstall() async {
+    bool result = await Share.isAppInstall(scheme);
+    debugPrint('result:$result');
   }
 
   _onShare(BuildContext context) async {

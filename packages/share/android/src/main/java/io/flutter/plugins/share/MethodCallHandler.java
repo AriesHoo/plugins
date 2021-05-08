@@ -26,7 +26,7 @@ class MethodCallHandler implements MethodChannel.MethodCallHandler {
   public void onMethodCall(MethodCall call, MethodChannel.Result result) {
     switch (call.method) {
       case "isAppInstall":
-        String packageName = call.argument("packageName");
+        String packageName = call.argument("packageOrScheme");
         boolean isInstall = share.isAppInstall(packageName);
         result.success(isInstall);
         break;
@@ -35,7 +35,7 @@ class MethodCallHandler implements MethodChannel.MethodCallHandler {
         // Android does not support showing the share sheet at a particular point on screen.
         String text = call.argument("text");
         String subject = call.argument("subject");
-        packageName = call.argument("packageName");
+        packageName = call.argument("packageOrScheme");
         String activityName = call.argument("activityName");
         share.share(text, subject, packageName, activityName);
         result.success(null);
@@ -47,7 +47,7 @@ class MethodCallHandler implements MethodChannel.MethodCallHandler {
         List<String> mimeTypes = call.argument("mimeTypes");
         text = call.argument("text");
         subject = call.argument("subject");
-        packageName = call.argument("packageName");
+        packageName = call.argument("packageOrScheme");
         activityName = call.argument("activityName");
         // Android does not support showing the share sheet at a particular point on screen.
         try {

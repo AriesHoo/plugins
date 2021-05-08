@@ -15,17 +15,17 @@ class Share {
   /// [MethodChannel] used to communicate with the platform side.
   @visibleForTesting
   static const MethodChannel channel =
-  MethodChannel('plugins.flutter.io/share');
+      MethodChannel('plugins.flutter.io/share');
 
   ///support Android
-  static Future<bool> isAppInstall(String packageName) async {
-    if (!Platform.isAndroid) {
+  static Future<bool> isAppInstall(String packageOrScheme) async {
+    if (!Platform.isAndroid && !Platform.isIOS) {
       return Future.value(false);
     }
-    assert(packageName != null);
-    assert(packageName.isNotEmpty);
+    assert(packageOrScheme != null);
+    assert(packageOrScheme.isNotEmpty);
     final Map<String, dynamic> params = <String, dynamic>{
-      'packageName': packageName,
+      'packageOrScheme': packageOrScheme,
     };
     dynamic result = await channel.invokeMethod<bool?>('isAppInstall', params);
     return true == result;
@@ -46,7 +46,8 @@ class Share {
   ///
   /// May throw [PlatformException] or [FormatException]
   /// from [MethodChannel].
-  static Future<void> share(String text, {
+  static Future<void> share(
+    String text, {
     String? subject,
     String? packageName,
     String? activityName,
@@ -82,7 +83,8 @@ class Share {
   ///
   /// May throw [PlatformException] or [FormatException]
   /// from [MethodChannel].
-  static Future<void> shareFiles(List<String> paths, {
+  static Future<void> shareFiles(
+    List<String> paths, {
     List<String>? mimeTypes,
     String? subject,
     String? text,
