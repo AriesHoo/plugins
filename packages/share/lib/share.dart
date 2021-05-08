@@ -1,9 +1,10 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
+// Copyright 2019 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 import 'dart:async';
 import 'dart:ui';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:meta/meta.dart' show visibleForTesting;
@@ -14,7 +15,21 @@ class Share {
   /// [MethodChannel] used to communicate with the platform side.
   @visibleForTesting
   static const MethodChannel channel =
-      MethodChannel('plugins.flutter.io/share');
+  MethodChannel('plugins.flutter.io/share');
+
+  ///support Android
+  static Future<bool> isAppInstall(String packageName) async {
+    if (!Platform.isAndroid) {
+      return Future.value(false);
+    }
+    assert(packageName != null);
+    assert(packageName.isNotEmpty);
+    final Map<String, dynamic> params = <String, dynamic>{
+      'packageName': packageName,
+    };
+    dynamic result = await channel.invokeMethod<bool?>('isAppInstall', params);
+    return true == result;
+  }
 
   /// Summons the platform's share sheet to share text.
   ///
@@ -31,9 +46,10 @@ class Share {
   ///
   /// May throw [PlatformException] or [FormatException]
   /// from [MethodChannel].
-  static Future<void> share(
-    String text, {
+  static Future<void> share(String text, {
     String? subject,
+    String? packageName,
+    String? activityName,
     Rect? sharePositionOrigin,
   }) {
     assert(text != null);
@@ -42,7 +58,8 @@ class Share {
       'text': text,
       'subject': subject,
     };
-
+    if (packageName != null) params['packageName'] = packageName;
+    if (activityName != null) params['activityName'] = activityName;
     if (sharePositionOrigin != null) {
       params['originX'] = sharePositionOrigin.left;
       params['originY'] = sharePositionOrigin.top;
@@ -65,11 +82,12 @@ class Share {
   ///
   /// May throw [PlatformException] or [FormatException]
   /// from [MethodChannel].
-  static Future<void> shareFiles(
-    List<String> paths, {
+  static Future<void> shareFiles(List<String> paths, {
     List<String>? mimeTypes,
     String? subject,
     String? text,
+    String? packageName,
+    String? activityName,
     Rect? sharePositionOrigin,
   }) {
     assert(paths != null);
@@ -83,7 +101,8 @@ class Share {
 
     if (subject != null) params['subject'] = subject;
     if (text != null) params['text'] = text;
-
+    if (packageName != null) params['packageName'] = packageName;
+    if (activityName != null) params['activityName'] = activityName;
     if (sharePositionOrigin != null) {
       params['originX'] = sharePositionOrigin.left;
       params['originY'] = sharePositionOrigin.top;
