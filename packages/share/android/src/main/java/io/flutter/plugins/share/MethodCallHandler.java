@@ -35,7 +35,7 @@ class MethodCallHandler implements MethodChannel.MethodCallHandler {
         // Android does not support showing the share sheet at a particular point on screen.
         String text = call.argument("text");
         String subject = call.argument("subject");
-        packageName = call.argument("packageOrScheme");
+        packageName = call.argument("packageName");
         String activityName = call.argument("activityName");
         share.share(text, subject, packageName, activityName);
         result.success(null);
@@ -47,7 +47,7 @@ class MethodCallHandler implements MethodChannel.MethodCallHandler {
         List<String> mimeTypes = call.argument("mimeTypes");
         text = call.argument("text");
         subject = call.argument("subject");
-        packageName = call.argument("packageOrScheme");
+        packageName = call.argument("packageName");
         activityName = call.argument("activityName");
         // Android does not support showing the share sheet at a particular point on screen.
         try {
