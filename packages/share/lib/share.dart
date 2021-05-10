@@ -49,6 +49,7 @@ class Share {
   static Future<void> share(
     String text, {
     String? subject,
+    String? title,
     String? packageName,
     String? activityName,
     Rect? sharePositionOrigin,
@@ -59,6 +60,7 @@ class Share {
       'text': text,
       'subject': subject,
     };
+    if (title != null) params['title'] = title;
     if (packageName != null) params['packageName'] = packageName;
     if (activityName != null) params['activityName'] = activityName;
     if (sharePositionOrigin != null) {
@@ -88,6 +90,7 @@ class Share {
     List<String>? mimeTypes,
     String? subject,
     String? text,
+    String? title,
     String? packageName,
     String? activityName,
     Rect? sharePositionOrigin,
@@ -103,6 +106,7 @@ class Share {
 
     if (subject != null) params['subject'] = subject;
     if (text != null) params['text'] = text;
+    if (title != null) params['title'] = title;
     if (packageName != null) params['packageName'] = packageName;
     if (activityName != null) params['activityName'] = activityName;
     if (sharePositionOrigin != null) {
