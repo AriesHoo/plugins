@@ -165,7 +165,7 @@ class Share {
 
             uris.add(
                     FileProvider.getUriForFile(
-                            getContext(), getContext().getPackageName() + ".flutter.share_provider", file));
+                            getContext(), getContext().getPackageName() + ".share_file_provider", file));
         }
         return uris;
     }

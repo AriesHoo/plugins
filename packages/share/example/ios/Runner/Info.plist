@@ -22,6 +22,12 @@
 	<string>1</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>This app requires access to the camera for sharing images.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app does not require access to the microphone for sharing images.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to the photo library for sharing images.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -45,11 +51,16 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app requires access to the photo library for sharing images.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>This app does not require access to the microphone for sharing images.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>This app requires access to the camera for sharing images.</string>
+	<key>LSApplicationQueriesSchemes</key>
+    <array>
+    	<string>amapuri</string>
+    	<string>iosamap</string>
+    	<string>qqmap</string>
+    	<string>baidumap</string>
+    	<string>mqq</string>
+    	<string>weixin</string>
+    	<string>wechat</string>
+    	<string>sinaweibo</string>
+    </array>
 </dict>
 </plist>
