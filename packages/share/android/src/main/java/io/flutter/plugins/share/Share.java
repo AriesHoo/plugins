@@ -123,6 +123,7 @@ class Share {
         }
         grantUriPermission(shareIntent, fileUris);
         Intent chooserIntent = Intent.createChooser(shareIntent, title != null ? title : "Share" /* dialog title optional */);
+        grantUriPermission(chooserIntent,fileUris);
         startActivity(chooserIntent);
     }
 
