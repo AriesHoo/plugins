@@ -135,7 +135,6 @@ static NSString *const PLATFORM_CHANNEL = @"plugins.flutter.io/share";
             NSArray *mimeTypes = arguments[@"mimeTypes"];
             NSString *subject = arguments[@"subject"];
             NSString *text = arguments[@"text"];
-            NSString *shareExtension = arguments[@"shareExtension"];
             
             if (paths.count == 0) {
                 result([FlutterError errorWithCode:@"error"
@@ -157,7 +156,6 @@ static NSString *const PLATFORM_CHANNEL = @"plugins.flutter.io/share";
                 withMimeType:mimeTypes
                  withSubject:subject
                     withText:text
-          withShareExtension:shareExtension
               withController:[UIApplication sharedApplication].keyWindow.rootViewController
                     atSource:originRect];
             result(nil);
@@ -176,13 +174,6 @@ static NSString *const PLATFORM_CHANNEL = @"plugins.flutter.io/share";
     }
     UIApplication *application = [UIApplication sharedApplication];
     return [application canOpenURL:url];
-}
-+ (BOOL)hasShareExtension:(NSString *)shareExtension {
-    SLComposeViewController *composeVc = [SLComposeViewController composeViewControllerForServiceType:shareExtension];
-    if (composeVc == nil){
-        return NO;
-    }
-    return YES;
 }
 + (void)share:(NSArray *)shareItems
 withController:(UIViewController *)controller
@@ -207,50 +198,32 @@ withController:(UIViewController *)controller
       withMimeType:(NSArray *)mimeTypes
        withSubject:(NSString *)subject
           withText:(NSString *)text
-withShareExtension:(NSString *)shareExtension
     withController:(UIViewController *)controller
           atSource:(CGRect)origin {
-    NSMutableArray *items = [[NSMutableArray alloc] init];
-    
-    if (text || subject) {
-        [items addObject:[[ShareData alloc] initWithSubject:subject text:text]];
+  NSMutableArray *items = [[NSMutableArray alloc] init];
+
+  if (text || subject) {
+    [items addObject:[[ShareData alloc] initWithSubject:subject text:text]];
+  }
+
+  for (int i = 0; i < [paths count]; i++) {
+    NSString *path = paths[i];
+    NSString *pathExtension = [path pathExtension];
+    NSString *mimeType = mimeTypes[i];
+    if ([pathExtension.lowercaseString isEqualToString:@"jpg"] ||
+        [pathExtension.lowercaseString isEqualToString:@"jpeg"] ||
+        [pathExtension.lowercaseString isEqualToString:@"png"] ||
+        [mimeType.lowercaseString isEqualToString:@"image/jpg"] ||
+        [mimeType.lowercaseString isEqualToString:@"image/jpeg"] ||
+        [mimeType.lowercaseString isEqualToString:@"image/png"]) {
+      UIImage *image = [UIImage imageWithContentsOfFile:path];
+      [items addObject:image];
+    } else {
+      [items addObject:[[ShareData alloc] initWithFile:path mimeType:mimeType]];
     }
-    NSLog(shareExtension);
-    SLComposeViewController *twitterViewController = [SLComposeViewController composeViewControllerForServiceType:SLServiceTypeTwitter];
-    SLComposeViewController *composeVc = [SLComposeViewController composeViewControllerForServiceType:shareExtension];
-    for (int i = 0; i < [paths count]; i++) {
-        NSString *path = paths[i];
-        NSString *pathExtension = [path pathExtension];
-        NSString *mimeType = mimeTypes[i];
-        if ([pathExtension.lowercaseString isEqualToString:@"jpg"] ||
-            [pathExtension.lowercaseString isEqualToString:@"jpeg"] ||
-            [pathExtension.lowercaseString isEqualToString:@"png"] ||
-            [mimeType.lowercaseString isEqualToString:@"image/jpg"] ||
-            [mimeType.lowercaseString isEqualToString:@"image/jpeg"] ||
-            [mimeType.lowercaseString isEqualToString:@"image/png"]) {
-            UIImage *image = [UIImage imageWithContentsOfFile:path];
-            [items addObject:image];
-            if(composeVc !=nil){
-                [composeVc addImage:image];
-            }
-        } else {
-            [items addObject:[[ShareData alloc] initWithFile:path mimeType:mimeType]];
-        }
-    }
-    if(twitterViewController==nil){
-        [self share:items withController:controller atSource:origin];
-    }else{
-        composeVc.popoverPresentationController.sourceView = controller.view;
-        composeVc.popoverPresentationController.sourceRect = origin;
-        UIActivityViewController *activityViewController =
-        [[UIActivityViewController alloc] initWithActivityItems:items applicationActivities:nil];
-        activityViewController.popoverPresentationController.sourceView = controller.view;
-        activityViewController.popoverPresentationController.sourceRect = origin;
-        activityViewController.excludedActivityTypes = @[UIActivityTypePrint,UIActivityTypeMail,UIActivityTypeAirDrop];
-        [activityViewController addChildViewController:composeVc];
-        [controller presentViewController:activityViewController animated:YES completion:nil];
-        
-    }
+  }
+
+  [self share:items withController:controller atSource:origin];
 }
 
 @end
